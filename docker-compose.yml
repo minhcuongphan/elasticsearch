@@ -10,6 +10,8 @@ services:
       - ${DOCKER_NGINX_PORT}:80
     links:
       - php:php
+    networks:
+      - internal
   php:
     build: _docker/php
     container_name: ${DOCKER_APP}-php
@@ -21,6 +23,8 @@ services:
     volumes:
       - ./:/var/www/html
       - ./_docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - internal
 
   mysql:
     image: mysql:5.7
@@ -30,14 +34,30 @@ services:
       - 3306:3306
     volumes:
       - ./_docker/data/mysql-5.7:/var/lib/mysql
-    environment:  `
+    environment:
       MYSQL_DATABASE: ${DOCKER_MYSQL_DATABASE}
       MYSQL_ROOT_PASSWORD: 'secret'
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'pass'
+    networks:
+      - internal
   redis:
     image: redis
     container_name: ${DOCKER_APP}-redis
     volumes:
       - ./_docker/data/redis:/data
     command: redis-server --appendonly yes
+    networks:
+      - internal
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+    environment:
+        - discovery.type=single-node
+    ports:
+        - 9200:9200
+    networks:
+        - internal
+
+networks:
+  internal:
